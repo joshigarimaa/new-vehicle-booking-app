@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Lock, Mail, User, X } from "lucide-react";
+import { CircleDashed, Lock, Mail, User, X } from "lucide-react";
 import Image from "next/image";
+import axios from "axios";
+import { signIn, useSession } from "next-auth/react";
 
 type propType = {
   open: boolean;
@@ -14,6 +16,51 @@ type stepType = "login" | "signup" | "otp";
 
 const AuthModel = ({ open, onClose }: propType) => {
   const [step, setStep] = useState<stepType>("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { data } = useSession();
+  console.log(data);
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError(res.error);
+      }
+    } catch (err: any) {
+      setError("Something went wrong");
+    }
+    setLoading(false);
+  };
+
+  const handleSignup = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await axios.post("/api/auth/register", {
+        name,
+        email,
+        password,
+      });
+      console.log(data);
+    } catch (error: any) {
+      setError(error?.response?.data?.message ?? "Something went wrong");
+    }
+    setLoading(false);
+  };
+
+  const handleGoogle = async () => {
+    await signIn("google");
+  };
 
   return (
     <AnimatePresence>
@@ -57,6 +104,7 @@ const AuthModel = ({ open, onClose }: propType) => {
                 <button
                   type="button"
                   className="w-full h-11 rounded-xl border border-black/20 flex items-center justify-center gap-3 text-sm font-semibold hover:bg-black hover:text-white transition"
+                  onClick={handleGoogle}
                 >
                   <Image
                     src="/googleImage.png"
@@ -86,26 +134,44 @@ const AuthModel = ({ open, onClose }: propType) => {
                         <div className="flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3">
                           <Mail className="text-gray-500" size={18} />
                           <input
+                            onChange={(e) => setEmail(e.target.value)}
                             type="email"
+                            value={email}
                             placeholder="Email"
-                            className="w-full bg-transparent outline-none text-sm focus:outline-none"
+                            className="w-full bg-transparent outline-none text-sm"
                           />
                         </div>
 
                         <div className="flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3">
                           <Lock className="text-gray-500" size={18} />
                           <input
+                            onChange={(e) => setPassword(e.target.value)}
                             type="password"
+                            value={password}
                             placeholder="Password"
-                            className="w-full bg-transparent outline-none text-sm focus:outline-none"
+                            className="w-full bg-transparent outline-none text-sm"
                           />
                         </div>
 
+                        {error && (
+                          <p className="text-red-500 text-sm">{error}</p>
+                        )}
+
                         <button
                           type="button"
-                          className="w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition"
+                          className="w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex justify-center items-center"
+                          onClick={handleLogin}
+                          disabled={loading}
                         >
-                          Login
+                          {!loading ? (
+                            "Login"
+                          ) : (
+                            <CircleDashed
+                              size={18}
+                              color="white"
+                              className="animate-spin"
+                            />
+                          )}
                         </button>
                       </div>
 
@@ -133,34 +199,54 @@ const AuthModel = ({ open, onClose }: propType) => {
                           <User className="text-gray-500" size={18} />
                           <input
                             type="text"
+                            onChange={(e) => setName(e.target.value)}
+                            value={name}
                             placeholder="Full Name"
-                            className="w-full bg-transparent outline-none text-sm focus:outline-none"
+                            className="w-full bg-transparent outline-none text-sm"
                           />
                         </div>
 
                         <div className="flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3">
                           <Mail className="text-gray-500" size={18} />
                           <input
+                            onChange={(e) => setEmail(e.target.value)}
+                            value={email}
                             type="email"
                             placeholder="Email"
-                            className="w-full bg-transparent outline-none text-sm focus:outline-none"
+                            className="w-full bg-transparent outline-none text-sm"
                           />
                         </div>
 
                         <div className="flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3">
                           <Lock className="text-gray-500" size={18} />
                           <input
+                            onChange={(e) => setPassword(e.target.value)}
+                            value={password}
                             type="password"
                             placeholder="Password"
-                            className="w-full bg-transparent outline-none text-sm focus:outline-none"
+                            className="w-full bg-transparent outline-none text-sm"
                           />
                         </div>
 
+                        {error && (
+                          <p className="text-red-500 text-sm">{error}</p>
+                        )}
+
                         <button
                           type="button"
-                          className="w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition"
+                          className="flex justify-center items-center w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition"
+                          disabled={loading}
+                          onClick={handleSignup}
                         >
-                          Sign Up
+                          {!loading ? (
+                            "Sign Up"
+                          ) : (
+                            <CircleDashed
+                              size={18}
+                              color="white"
+                              className="animate-spin"
+                            />
+                          )}
                         </button>
                       </div>
 
