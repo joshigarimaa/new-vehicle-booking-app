@@ -31,14 +31,14 @@ const userSchema = new mongoose.Schema<IUser>(
       default: "user",
       enum: ["user", "partner", "admin"],
     },
-    isEmailVerified?: {
+    isEmailVerified: {
       type: Boolean,
       default: false,
     },
-    otp?: {
+    otp: {
       type: String,
     },
-    otpExpiresAt?: {
+    otpExpiresAt: {
       type: Date,
     },
   },

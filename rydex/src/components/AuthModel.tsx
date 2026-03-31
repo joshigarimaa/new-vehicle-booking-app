@@ -15,7 +15,7 @@ type propType = {
 type stepType = "login" | "signup" | "otp";
 
 const AuthModel = ({ open, onClose }: propType) => {
-  const [step, setStep] = useState<stepType>("otp");
+  const [step, setStep] = useState<stepType>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,18 +61,45 @@ const AuthModel = ({ open, onClose }: propType) => {
   const handleSignup = async () => {
     setLoading(true);
     setError("");
+    if (!email) {
+      setError("Email is required");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data } = await axios.post("/api/auth/register", {
+      console.log("Frontend email:", email); // DEBUG
+
+      await axios.post("/api/auth/register", {
         name,
         email,
         password,
       });
 
       setStep("otp");
-      setLoading(false);
     } catch (error: any) {
       setError(error?.response?.data?.message ?? "Something went wrong");
     }
+
+    setLoading(false);
+  };
+
+  const verifyEmail = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      await axios.post("/api/verify-email", {
+        email,
+        otp: otp.join(""),
+      });
+      setOtp(["", "", "", "", "", ""]);
+      setError("");
+      setStep("login");
+    } catch (error: any) {
+      setError(error?.response?.data?.message ?? "Something went wrong");
+    }
+
     setLoading(false);
   };
 
@@ -301,8 +328,12 @@ const AuthModel = ({ open, onClose }: propType) => {
                           />
                         ))}
                       </div>
-                      <button className="mt-6 w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition">
-                        Verify and Create Account
+                      <button
+                        onClick={verifyEmail}
+                        disabled={loading}
+                        className="mt-6 flex justify-center items-center w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex justify-center items-center"
+                      >
+                        {!loading ? "Verify and Create Account" : "Loading..."}
                       </button>
                     </motion.div>
                   )}
